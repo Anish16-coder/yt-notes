@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoteFlow — Transcript to Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2230;
+    --border: #2a2f42;
+    --accent: #6c8bff;
+    --accent-glow: rgba(108,139,255,0.18);
+    --green: #4ecca3;
+    --yellow: #f5c842;
+    --red: #ff6b6b;
+    --text: #e8eaf2;
+    --muted: #7880a0;
+    --font-head: 'Space Grotesk', sans-serif;
+    --font-body: 'Lora', serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* Header */
+  header {
+    padding: 28px 40px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+  }
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  header h1 {
+    font-family: var(--font-head);
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  header span {
+    font-family: var(--font-head);
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    margin-left: 6px;
+  }
+
+  /* Layout */
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  .tagline {
+    font-family: var(--font-head);
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    letter-spacing: -0.03em;
+  }
+  .tagline em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .sub {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-bottom: 36px;
+    font-family: var(--font-head);
+  }
+
+  /* How to guide */
+  .how-to {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .how-to-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-family: var(--font-head);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .step-num {
+    width: 22px; height: 22px;
+    background: var(--accent-glow);
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step strong { color: var(--text); }
+  .how-title {
+    font-family: var(--font-head);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+  }
+
+  /* Input area */
+  .input-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    font-family: var(--font-head);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 10px;
+  }
+  textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.7;
+    padding: 14px 16px;
+    resize: vertical;
+    min-height: 160px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  /* Subject selector */
+  .subject-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .subject-btn {
+    font-family: var(--font-head);
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .subject-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .subject-btn.active {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Generate button */
+  .gen-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 16px;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font-head);
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: opacity 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .gen-btn:hover { opacity: 0.88; }
+  .gen-btn:active { transform: scale(0.98); }
+  .gen-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* Loader */
+  .loader {
+    display: none;
+    text-align: center;
+    padding: 48px 0;
+    font-family: var(--font-head);
+    color: var(--muted);
+  }
+  .loader.show { display: block; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Notes output */
+  #output { display: none; }
+  #output.show { display: block; }
+
+  .notes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: gap;
+  }
+  .notes-title {
+    font-family: var(--font-head);
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .notes-title::before {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .copy-btn {
+    font-family: var(--font-head);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { border-color: var(--green); color: var(--green); }
+
+  /* Notes content rendered */
+  .notes-body {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    font-family: var(--font-body);
+    font-size: 0.97rem;
+    line-height: 1.85;
+    color: var(--text);
+  }
+
+  /* Markdown rendering styles */
+  .notes-body h1 {
+    font-family: var(--font-head);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .notes-body h2 {
+    font-family: var(--font-head);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--yellow);
+    margin-top: 28px;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+  .notes-body h3 {
+    font-family: var(--font-head);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--green);
+    margin-top: 18px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .notes-body p { margin-bottom: 10px; }
+  .notes-body ul, .notes-body ol {
+    padding-left: 20px;
+    margin-bottom: 12px;
+  }
+  .notes-body li { margin-bottom: 4px; }
+  .notes-body strong { color: var(--text); font-weight: 600; }
+  .notes-body em { color: var(--muted); font-style: italic; }
+  .notes-body code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: var(--accent);
+  }
+  .notes-body pre {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin: 12px 0;
+    overflow-x: auto;
+  }
+  .notes-body pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88rem;
+    color: var(--green);
+  }
+  .notes-body blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 16px;
+    color: var(--muted);
+    margin: 12px 0;
+    font-style: italic;
+  }
+  .notes-body hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  /* Error */
+  .error-box {
+    background: rgba(255,107,107,0.08);
+    border: 1px solid var(--red);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-family: var(--font-head);
+    font-size: 0.88rem;
+    color: var(--red);
+    display: none;
+    margin-top: 12px;
+  }
+  .error-box.show { display: block; }
+
+  @media (max-width: 600px) {
+    header { padding: 20px; }
+    .container { padding: 28px 16px 60px; }
+    .tagline { font-size: 1.5rem; }
+    .notes-body { padding: 18px; }
+    .how-to { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">📝</div>
+  <div>
+    <h1>NoteFlow <span>AI-Powered</span></h1>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tagline">Turn any lecture into<br><em>exam-ready notes.</em></div>
+  <div class="sub">Paste a YouTube transcript → get structured notes in seconds.</div>
+
+  <div class="how-to">
+    <div style="flex:1">
+      <div class="how-title">✦ How to get transcript</div>
+      <div class="how-to-steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>Open the YouTube video. Click the <strong>three-dot menu (···)</strong> below the video.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>Click <strong>"Show transcript"</strong> — a panel opens on the right side.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>Click the <strong>three-dot menu</strong> inside the transcript panel → <strong>"Toggle timestamps"</strong> to hide timestamps.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div><strong>Select all text</strong> in the panel, copy, and paste below.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-card">
+    <label>Paste YouTube Transcript</label>
+    <textarea id="transcript" placeholder="Paste the full transcript here...&#10;&#10;e.g. in this video we are going to learn about Newton's laws of motion. First law states that an object at rest stays at rest..."></textarea>
+
+    <div class="subject-row" id="subjectRow">
+      <div style="font-family:var(--font-head);font-size:0.78rem;color:var(--muted);align-self:center;margin-right:4px;">Subject:</div>
+      <button class="subject-btn active" onclick="selectSubject(this,'General')">General</button>
+      <button class="subject-btn" onclick="selectSubject(this,'Physics')">Physics</button>
+      <button class="subject-btn" onclick="selectSubject(this,'Mathematics')">Mathematics</button>
+      <button class="subject-btn" onclick="selectSubject(this,'Chemistry')">Chemistry</button>
+      <button class="subject-btn" onclick="selectSubject(this,'Biology')">Biology</button>
+      <button class="subject-btn" onclick="selectSubject(this,'Computer Science')">CS / Coding</button>
+      <button class="subject-btn" onclick="selectSubject(this,'History')">History</button>
+    </div>
+
+    <button class="gen-btn" id="genBtn" onclick="generateNotes()">
+      ✦ Generate Notes
+    </button>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <div>Generating your notes...</div>
+  </div>
+
+  <div id="output">
+    <div class="notes-header">
+      <div class="notes-title">Your Notes</div>
+      <button class="copy-btn" onclick="copyNotes()">Copy Notes</button>
+    </div>
+    <div class="notes-body" id="notesBody"></div>
+  </div>
+</div>
+
+<script>
+let selectedSubject = 'General';
+let rawNotes = '';
+
+function selectSubject(btn, subject) {
+  document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedSubject = subject;
+}
+
+function renderMarkdown(md) {
+  let html = md
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // Code blocks
+    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // H1
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    // H2
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    // H3
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    // Bold
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // HR
+    .replace(/^---$/gm, '<hr>')
+    // Blockquote
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    // Unordered list items
+    .replace(/^[\-\*] (.+)$/gm, '<li>$1</li>')
+    // Ordered list items
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+  // Wrap consecutive <li> in <ul>
+  html = html.replace(/(<li>[\s\S]*?<\/li>(\n|$))+/g, m => '<ul>' + m + '</ul>');
+
+  // Paragraphs
+  html = html.split('\n\n').map(block => {
+    if (block.match(/^<(h[123]|ul|ol|pre|hr|blockquote)/)) return block;
+    if (block.trim() === '') return '';
+    return '<p>' + block.trim().replace(/\n/g, ' ') + '</p>';
+  }).join('\n');
+
+  return html;
+}
+
+async function generateNotes() {
+  const transcript = document.getElementById('transcript').value.trim();
+  if (!transcript) {
+    showError('Please paste a transcript first!');
+    return;
+  }
+  if (transcript.length < 100) {
+    showError('Transcript seems too short. Please paste the full transcript.');
+    return;
+  }
+
+  hideError();
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('loader').classList.add('show');
+  document.getElementById('output').classList.remove('show');
+
+  try {
+    const response = await fetch("/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        transcript: transcript,
+        subject: selectedSubject
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      showError('Error: ' + data.error);
+      return;
+    }
+
+    rawNotes = data.notes;
+    document.getElementById('notesBody').innerHTML = renderMarkdown(rawNotes);
+    document.getElementById('output').classList.add('show');
+    document.getElementById('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch (err) {
+    showError('Something went wrong. Please try again.');
+    console.error(err);
+  } finally {
+    document.getElementById('loader').classList.remove('show');
+    document.getElementById('genBtn').disabled = false;
+  }
+}
+
+function copyNotes() {
+  navigator.clipboard.writeText(rawNotes).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied!';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = 'Copy Notes';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  });
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.classList.add('show');
+}
+function hideError() {
+  document.getElementById('errorBox').classList.remove('show');
+}
+</script>
+</body>
+</html>
